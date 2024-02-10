@@ -174,33 +174,11 @@ pub struct ProcreateFile {
     pub author_name: Option<String>,
     pub background_hidden: bool,
     pub background_color: [f32; 4],
-    //     closedCleanlyKey:Bool?
-    //     colorProfile:ValkyrieColorProfile?
-
-    // //  public var drawingguide
-    //     faceBackgroundHidden:Bool?
-    //     1 => BlendingMode::featureSet:Int?
     pub flipped: Flipped,
     pub layers: SilicaGroup,
-    //     mask:SilicaLayer?
     pub name: Option<String>,
     pub orientation: u32,
-    //     primaryItem:Any?
-    // //  skipping a bunch of reference window related stuff here
-    //     selectedLayer:Any?
-    //     selectedSamplerLayer:SilicaLayer?
-    //     SilicaDocumentArchiveDPIKey:Float?
-    //     SilicaDocumentArchiveUnitKey:Int?
-    //     SilicaDocumentTrackedTimeKey:Float?
-    //     SilicaDocumentVideoPurgedKey:Bool?
-    //     SilicaDocumentVideoSegmentInfoKey:VideoSegmentInfo? // not finished
-    //     size: CGSize?
-    //     solo: SilicaLayer?
     pub stroke_count: usize,
-    //     videoEnabled: Bool? = true
-    //     videoQualityKey: String?
-    //     videoResolutionKey: String?
-    //     videoDuration: String? = "Calculating..."
     pub tile_size: u32,
     pub composite: Option<SilicaLayer>,
     pub size: Size<u32>,
@@ -232,28 +210,12 @@ impl SilicaGroup {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SilicaLayer {
-    // animationHeldLength:Int?
     pub blend: BlendingMode,
-    // bundledImagePath:String?
-    // bundledMaskPath:String?
-    // bundledVideoPath:String?
     pub clipped: bool,
-    // contentsRect:Data?
-    // contentsRectValid:Bool?
-    // document:SilicaDocument?
-    // extendedBlend:Int?
     pub hidden: bool,
-    // locked:Bool?
     pub mask: Option<usize>,
     pub name: Option<String>,
     pub opacity: f32,
-    // perspectiveAssisted:Bool?
-    // preserve:Bool?
-    // private:Bool?
-    // text:ValkyrieText?
-    // textPDF:Data?
-    // transform:Data?
-    // type:Int?
     pub size: Size<u32>,
     pub uuid: String,
     pub version: u64,
