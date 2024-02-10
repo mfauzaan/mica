@@ -1,24 +1,17 @@
-use crate::compositor::CompositorTarget;
+use crate::compositor::{CompositorTarget, BufferDimensions};
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::compositor::{CompositeLayer, CompositorPipeline};
 use crate::silica::{ProcreateFile, SilicaError, SilicaHierarchy};
-use egui_dock::{NodeIndex, SurfaceIndex};
-use egui_notify::Toasts;
 use parking_lot::{Mutex, RwLock};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::Arc;
-use tokio::runtime::Runtime;
 
 pub struct App {
     pub dev: Arc<GpuHandle>,
-    pub rt: Arc<Runtime>,
     pub compositor: CompositorHandle,
-    pub toasts: Mutex<Toasts>,
-    pub added_instances: Mutex<Vec<(SurfaceIndex, NodeIndex, InstanceKey)>>,
 }
-
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Default, Debug)]
 pub struct InstanceKey(pub usize);
@@ -43,24 +36,25 @@ pub struct CompositorHandle {
 }
 
 impl App {
-    pub fn new(dev: GpuHandle, rt: Arc<Runtime>) -> Self {
+    pub fn new(dev: GpuHandle) -> Self {
         App {
             compositor: CompositorHandle {
                 instances: RwLock::new(HashMap::new()),
                 pipeline: CompositorPipeline::new(&dev),
                 curr_id: AtomicUsize::new(0),
             },
-            rt,
             dev: Arc::new(dev),
-            toasts: Mutex::new(egui_notify::Toasts::default()),
-            added_instances: Mutex::new(Vec::with_capacity(1)),
         }
     }
 
-    pub async fn load_file(&self, path: PathBuf) -> Result<InstanceKey, SilicaError> {
-        let (file, textures) =
-            tokio::task::block_in_place(|| ProcreateFile::open(path, &self.dev)).unwrap();
+    pub async fn load_file(
+        &self,
+        path: PathBuf,
+    ) -> Result<(ProcreateFile, GpuTexture, CompositorTarget), SilicaError> {
+        let (file, gpu_textures) = ProcreateFile::open(path, &self.dev).unwrap();
+
         let mut target = CompositorTarget::new(self.dev.clone());
+
         target
             .data
             .flip_vertices(file.flipped.horizontally, file.flipped.vertically);
@@ -71,22 +65,42 @@ impl App {
             target.set_dimensions(target.dim.height, target.dim.width);
         }
 
-        let id = self
-            .compositor
-            .curr_id
-            .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-        let key = InstanceKey(id);
-        self.compositor.instances.write().insert(
-            key,
-            Instance {
-                file: RwLock::new(file),
-                target: Mutex::new(target),
-                textures,
-                changed: AtomicBool::new(true),
-            },
-        );
+        Ok((file, gpu_textures, target))
+    }
 
-        Ok(key)
+    pub async fn extract_layers_export(
+        &self,
+        file: &ProcreateFile,
+        textures: &GpuTexture,
+        mut target: CompositorTarget,
+        current_dir: PathBuf,
+    ) {
+        let new_layer_config = file.layers.clone();
+        let background = (!file.background_hidden).then_some(file.background_color);
+
+        let layers = App::linearize_silica_layers(&new_layer_config);
+
+        for unresolved_layer in &layers {
+            target.render(
+                &self.compositor.pipeline,
+                background,
+                &[unresolved_layer.clone()],
+                &textures,
+            );
+            if let Some(texture) = target.output.as_ref() {
+                let export_path = std::path::Path::new(&current_dir).join(format!(
+                    "demo_layers/{}.png",
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis()
+                ));
+
+                let copied_texture = texture.texture.clone(&self.dev);
+                let dim = BufferDimensions::from_extent(copied_texture.size);
+                let _ = copied_texture.export(&target.dev, dim, export_path).await;
+            }
+        }
     }
 
     /// Transform tree structure of layers into a linear list of
