@@ -18,7 +18,6 @@ async fn main() {
     let app = App::new(dev);
 
     let (file, gpu_textures, target) = app.load_file(config_path).await.unwrap();
-
-    app.extract_layers_export(&file, &gpu_textures, target, current_dir)
+    app.extract_layers_and_export(&file, &gpu_textures, target, current_dir)
         .await;
 }

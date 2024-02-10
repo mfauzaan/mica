@@ -68,7 +68,7 @@ impl App {
         Ok((file, gpu_textures, target))
     }
 
-    pub async fn extract_layers_export(
+    pub async fn extract_layers_and_export(
         &self,
         file: &ProcreateFile,
         textures: &GpuTexture,
