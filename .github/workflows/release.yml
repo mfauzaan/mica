@@ -1,0 +1,97 @@
+
+name: Releases
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  BIN_NAME: silicate
+  BUNDLE_NAME: Silicate
+
+jobs:
+  build_job:
+    name: Build release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # don't fail other jobs if one fails
+      matrix:
+        build: [x86_64-linux, x86_64-macos, x86_64-windows]
+        include:
+        - build: x86_64-linux
+          os: ubuntu-latest
+          rust: stable
+          target: x86_64-unknown-linux-gnu
+          cross: false
+          bundle: silicate
+        - build: x86_64-macos
+          os: macos-latest
+          rust: stable
+          target: x86_64-apple-darwin
+          cross: false
+          bundle: Silicate.dmg
+        - build: x86_64-windows
+          os: windows-latest
+          rust: stable
+          target: x86_64-pc-windows-msvc
+          cross: false
+          bundle: Silicate.exe
+        - build: aarch64-macos
+          os: macos-latest
+          rust: stable
+          target: aarch64-apple-darwin
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Install ${{ matrix.rust }} toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-bundle
+        if: matrix.os == 'macos-latest'
+        run: cargo install cargo-bundle
+
+      - name: Build release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Build macOS bundle
+        uses: actions-rs/cargo@v1
+        if: matrix.os == 'macos-latest'
+        with:
+          use-cross: ${{ matrix.cross }}
+          command: bundle
+          args: --release --target ${{ matrix.target }}
+
+      - name: Package macOS DMG
+        shell: bash
+        if: matrix.os == 'macos-latest'
+        run: >-
+            hdiutil create "target/${{ matrix.target }}/release/bundle/osx/${{ matrix.bundle }}"
+            -volname "${{ env.BUNDLE_NAME }}"
+            -srcfolder "target/${{ matrix.target }}/release/bundle/osx/${{ env.BUNDLE_NAME }}.app" -ov
+
+      - name: Build archive
+        shell: bash
+        run: |
+          mkdir dist
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp "target/${{ matrix.target }}/release/$BIN_NAME.exe" "dist/${{ matrix.bundle }}"
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            cp "target/${{ matrix.target }}/release/bundle/osx/${{ matrix.bundle }}" "dist/${{ matrix.bundle }}"
+          else
+            cp "target/${{ matrix.target }}/release/$BIN_NAME" "dist/${{ matrix.bundle }}"
+          fi
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/${{ matrix.bundle }}
