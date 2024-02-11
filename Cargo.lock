@@ -674,7 +674,6 @@ dependencies = [
  "memmap2",
  "minilzo-rs",
  "once_cell",
- "parking_lot",
  "plist",
  "rayon",
  "regex",

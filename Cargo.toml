@@ -32,8 +32,6 @@ rayon = "1"
 # GPU rendering
 wgpu = "0.18"
 bytemuck = { version = "1.12", features = ["derive"] }
-# Synchronization
-parking_lot = "0.12"
 # Async runtime
 tokio = { version = "1.21", features = ["full"] }
 

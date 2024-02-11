@@ -215,7 +215,7 @@ pub(crate) fn decompress_internal<const USE_DICT: bool, S: Sink>(
     };
     let output_base = unsafe { output.base_mut_ptr() };
     let output_end = unsafe { output_base.add(output.capacity()) };
-    let output_start_pos_ptr = unsafe { output.base_mut_ptr().add(output.pos()) as *mut u8 };
+    let output_start_pos_ptr = unsafe { output.base_mut_ptr().add(output.pos()) };
     let mut output_ptr = output_start_pos_ptr;
 
     let mut input_ptr = input.as_ptr();

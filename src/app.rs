@@ -2,30 +2,12 @@ use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::compositor::{BufferDimensions, CompositorTarget};
 use crate::compositor::{CompositeLayer, CompositorPipeline};
 use crate::procreate::{ProcreateFile, ProcreateError, SilicaHierarchy};
-use parking_lot::{Mutex, RwLock};
 use std::path::PathBuf;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 pub struct App {
     pub dev: Arc<GpuHandle>,
     pub pipeline: CompositorPipeline,
-}
-
-#[derive(Hash, Clone, Copy, PartialEq, Eq, Default, Debug)]
-pub struct InstanceKey(pub usize);
-
-pub struct Instance {
-    pub file: RwLock<ProcreateFile>,
-    pub textures: GpuTexture,
-    pub target: Mutex<CompositorTarget>,
-    pub changed: AtomicBool,
-}
-
-impl Drop for Instance {
-    fn drop(&mut self) {
-        println!("Closing {:?}", self.file.get_mut().name);
-    }
 }
 
 impl App {
@@ -74,7 +56,7 @@ impl App {
                 &self.pipeline,
                 background,
                 &[unresolved_layer.clone()],
-                &textures,
+                textures,
             );
             if let Some(texture) = target.output.as_ref() {
                 let export_path = std::path::Path::new(&current_dir).join(format!(
