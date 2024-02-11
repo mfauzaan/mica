@@ -1,9 +1,9 @@
 [package]
-name = "silicate"
+name = "mica"
 version = "0.2.1"
 edition = "2021"
 authors = ["An Tran <antran@caltech.edu>"]
-description = "Cross-platform GPU-accelerated Procreate file viewer.s"
+description = "Cross-platform GPU-accelerated Procreate layer exporter" 
 readme = "README.md"
 repository = "https://github.com/Avarel/procreate-rs"
 license = "MIT"
@@ -25,7 +25,7 @@ minilzo-rs = "0.6.0"
 plist = "1.3"
 thiserror = "1.0"
 regex = "1.6"
-image = { version = "0.24", default-features = false, features = ["png", "jpeg", "tga", "tiff", "webp", "bmp"] }
+image = { version = "0.24", default-features = false, features = ["png"] }
 once_cell = "1"
 memmap2 = "0.9"
 rayon = "1"
@@ -34,18 +34,8 @@ wgpu = "0.18"
 bytemuck = { version = "1.12", features = ["derive"] }
 # Synchronization
 parking_lot = "0.12"
-# Display GUI
-egui = "0.24"
-egui-wgpu = "0.24"
-egui-winit = { version = "0.24", default-features = false }
-# winit = "0.29"
-egui_dock = "0.9"
-# egui_dock = { path = "libs/egui_dock" }
-egui-notify = "0.11"
 # Async runtime
-rfd = { version = "0.12", default-features = false, features = ["xdg-portal"] }
 tokio = { version = "1.21", features = ["full"] }
-futures = "0.3"
 
 [profile.release]
 strip = true
@@ -60,7 +50,7 @@ winres = "0.1"
 cc = "1.0"
 
 [package.metadata.bundle]
-name = "Silicate"
-identifier = "io.antran.silicate"
+name = "mica"
+identifier = "io.antran.mica"
 icon = ["assets/icon.ico"]
 category = "Utility"

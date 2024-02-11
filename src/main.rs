@@ -7,8 +7,6 @@ mod procreate;
 use app::App;
 use compositor::dev::GpuHandle;
 
-pub use egui_winit::winit;
-
 #[tokio::main]
 async fn main() {
     let current_dir = std::env::current_dir().expect("Unable to get current working directory");

@@ -6,7 +6,7 @@ on:
       - master
 
 env:
-  BIN_NAME: silicate
+  BIN_NAME: mica
 
 jobs:
   build_job:

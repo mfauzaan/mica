@@ -1,4 +1,4 @@
-   Compiling silicate v0.1.0 (C:\Users\antra\Projects\procreate-rs)
+   Compiling mica v0.1.0 (C:\Users\antra\Projects\procreate-rs)
 warning: unused variable: `file`
    --> src\silica\mod.rs:508:13
     |
@@ -7,9 +7,9 @@ warning: unused variable: `file`
     |
     = note: `#[warn(unused_variables)]` on by default
 
-warning: `silicate` (bin "silicate") generated 1 warning
+warning: `mica` (bin "mica") generated 1 warning
     Finished dev [unoptimized + debuginfo] target(s) in 4.17s
-     Running `target\debug\silicate.exe`
+     Running `target\debug\mica.exe`
 [src\compositor\dev.rs:53] adapter.get_info() = AdapterInfo {
     name: "NVIDIA GeForce RTX 3070 Laptop GPU",
     vendor: 4318,

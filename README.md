@@ -13,7 +13,7 @@ Cross-platform native exporter for `.procreate` files. There is a
 ## Features
 * Support to run on lambda
 * Stream the file to s3
-* Export `.procreate` files to `png, jpeg, tga, tiff, webp, bmp` formats.
+* Export `.procreate` files to `png` formats.
 
 ## Notes
 ### Accuracy
