@@ -72,7 +72,7 @@ impl<'a> Sink for SliceSink<'a> {
     /// Returns a raw ptr to the first unfilled byte of the Sink. Analogous to `[pos..].as_ptr()`.
     #[inline]
     unsafe fn pos_mut_ptr(&mut self) -> *mut u8 {
-        self.base_mut_ptr().add(self.pos()) as *mut u8
+        self.base_mut_ptr().add(self.pos())
     }
 
     /// Pushes a byte to the end of the Sink.
@@ -149,7 +149,7 @@ impl Sink for PtrSink {
     /// Returns a raw ptr to the first unfilled byte of the Sink. Analogous to `[pos..].as_ptr()`.
     #[inline]
     unsafe fn pos_mut_ptr(&mut self) -> *mut u8 {
-        self.base_mut_ptr().add(self.pos()) as *mut u8
+        self.base_mut_ptr().add(self.pos())
     }
 
     /// Pushes a byte to the end of the Sink.

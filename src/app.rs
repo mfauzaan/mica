@@ -76,8 +76,8 @@ impl App {
 
     /// Transform tree structure of layers into a linear list of
     /// layers for rendering.
-    pub fn linearize_silica_layers<'a>(
-        layers: &'a crate::procreate::SilicaGroup,
+    pub fn linearize_silica_layers(
+        layers: &crate::procreate::SilicaGroup,
     ) -> Vec<CompositeLayer> {
         fn inner<'a>(
             layers: &'a crate::procreate::SilicaGroup,
