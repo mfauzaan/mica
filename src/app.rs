@@ -60,7 +60,7 @@ impl App {
             );
             if let Some(texture) = target.output.as_ref() {
                 let export_path = std::path::Path::new(&current_dir).join(format!(
-                    "demo_layers/{}.png",
+                    "tmp/demo_layers/{}.png",
                     std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
