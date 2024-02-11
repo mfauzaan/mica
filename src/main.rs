@@ -15,7 +15,10 @@ async fn main() {
     let dev = GpuHandle::new().await.expect("Unable to create GpuHandle");
     let app = App::new(dev);
 
-    let (file, gpu_textures, target) = app.load_file(config_path).await.expect("Unable to load file");
+    let (file, gpu_textures, target) = app
+        .load_file(config_path)
+        .await
+        .expect("Unable to load file");
 
     app.extract_layers_and_export(&file, &gpu_textures, target, current_dir)
         .await;

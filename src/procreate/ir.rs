@@ -1,7 +1,9 @@
 use std::io::Read;
 use std::sync::atomic::AtomicU32;
 
-use super::{ProcreateError, SilicaGroup, SilicaHierarchy, SilicaLayer, TilingData, ZipArchiveMmap};
+use super::{
+    ProcreateError, SilicaGroup, SilicaHierarchy, SilicaLayer, TilingData, ZipArchiveMmap,
+};
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::ns_archive::{NsArchiveError, NsClass, Size, WrappedArray};
 use crate::ns_archive::{NsDecode, NsKeyedArchive};

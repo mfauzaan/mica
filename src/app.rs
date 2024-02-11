@@ -1,7 +1,7 @@
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::compositor::{BufferDimensions, CompositorTarget};
 use crate::compositor::{CompositeLayer, CompositorPipeline};
-use crate::procreate::{ProcreateFile, ProcreateError, SilicaHierarchy};
+use crate::procreate::{ProcreateError, ProcreateFile, SilicaHierarchy};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -76,9 +76,7 @@ impl App {
 
     /// Transform tree structure of layers into a linear list of
     /// layers for rendering.
-    pub fn linearize_silica_layers(
-        layers: &crate::procreate::SilicaGroup,
-    ) -> Vec<CompositeLayer> {
+    pub fn linearize_silica_layers(layers: &crate::procreate::SilicaGroup) -> Vec<CompositeLayer> {
         fn inner<'a>(
             layers: &'a crate::procreate::SilicaGroup,
             composite_layers: &mut Vec<CompositeLayer>,
