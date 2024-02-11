@@ -58,6 +58,7 @@ impl App {
                 &[unresolved_layer.clone()],
                 textures,
             );
+
             if let Some(texture) = target.output.as_ref() {
                 let export_path = std::path::Path::new(&current_dir).join(format!(
                     "tmp/demo_layers/{}.png",

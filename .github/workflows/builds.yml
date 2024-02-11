@@ -1,16 +1,16 @@
 
-name: Master
+name: Main
 on:
   push:
     branches:
-      - master
+      - main
 
 env:
   BIN_NAME: mica
 
 jobs:
   build_job:
-    name: Build master branch
+    name: Build main branch
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false # don't fail other jobs if one fails

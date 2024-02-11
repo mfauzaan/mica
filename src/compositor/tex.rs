@@ -209,26 +209,26 @@ impl GpuTexture {
         // the future. Otherwise the application will freeze.
         let (tx, rx) = tokio::sync::oneshot::channel();
         buffer_slice.map_async(wgpu::MapMode::Read, move |result| tx.send(result).unwrap());
+
         dev.device.poll(wgpu::Maintain::Wait);
+        // dev.device.poll(wgpu::Maintain::Wait);
         rx.await.unwrap().expect("Buffer mapping failed");
 
         let data = buffer_slice.get_mapped_range().to_vec();
         output_buffer.unmap();
 
-        eprintln!("Loading data to CPU");
-        let buffer = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(
-            dim.padded_bytes_per_row / 4,
-            dim.height,
-            data,
-        )
-        .unwrap();
-
-        let buffer = image::imageops::crop_imm(&buffer, 0, 0, dim.width, dim.height).to_image();
-
-        eprintln!("Saving the file to {}", path.display());
-
         tokio::spawn(async move {
+            eprintln!("Loading data to CPU");
+            let buffer = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(
+                dim.padded_bytes_per_row / 4,
+                dim.height,
+                data,
+            )
+            .unwrap();
+
+            eprintln!("Saving the file to {}", path.display());
             buffer.save(path).expect("Failed to save image");
+            eprintln!("Image saved");
         });
 
         Ok(())
