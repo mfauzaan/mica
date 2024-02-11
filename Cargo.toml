@@ -16,6 +16,10 @@ members = [
 [features]
 default = []
 
+[lib]
+path = "src/mica.rs"
+doctest = false
+
 [dependencies]
 # Procreate support
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
