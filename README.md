@@ -1,4 +1,4 @@
-#  Procreate Layer Exporter
+#  Mica - Procreate Layer Exporter
 
 Cross-platform native exporter for `.procreate` files. There is a 
 `reference.procreate` file in the base directory for users to try.
