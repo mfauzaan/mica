@@ -1,16 +1,15 @@
 [package]
 name = "mica"
-version = "0.2.1"
+version = "0.0.1"
 edition = "2021"
-authors = ["An Tran <antran@caltech.edu>"]
+authors = ["Fauzaan <mfauzaan@icloud.com>"]
 description = "Cross-platform GPU-accelerated Procreate layer exporter" 
 readme = "README.md"
-repository = "https://github.com/Avarel/procreate-rs"
+repository = "https://github.com/mfauzaan/mica.git"
 license = "MIT"
 
 [workspace]
 members = [
-    # "libs/egui_dock",
     "libs/lz4_flex"
 ]
 
@@ -41,14 +40,5 @@ lto = true
 panic = "abort"
 codegen-units = 1
 
-[target.'cfg(windows)'.build-dependencies]
-winres = "0.1"
-
 [build-dependencies]
 cc = "1.0"
-
-[package.metadata.bundle]
-name = "mica"
-identifier = "io.antran.mica"
-icon = ["assets/icon.ico"]
-category = "Utility"
