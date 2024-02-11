@@ -7,7 +7,7 @@ use self::{
     dev::GpuHandle,
     tex::GpuTexture,
 };
-use crate::silica::BlendingMode;
+use crate::procreate::BlendingMode;
 use image::{Pixel, Rgba};
 use std::{num::NonZeroU32, sync::Arc};
 use wgpu::{util::DeviceExt, CommandEncoder};

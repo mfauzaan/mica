@@ -1,11 +1,6 @@
-# Silicate - Procreate File Renderer
+#  Procreate Layer Exporter
 
-<p align="center">
-  <img src="media/windows.png" width="400"/>
-  <img src="media/macos.png" width="400"/>
-</p>
-
-Cross-platform native viewer for `.procreate` files. There is a 
+Cross-platform native exporter for `.procreate` files. There is a 
 `reference.procreate` file in the base directory for users to try.
 
 ## Downloads
@@ -16,24 +11,9 @@ Cross-platform native viewer for `.procreate` files. There is a
       application to run, since there is no code signing.
 
 ## Features
-* Native desktop app for Windows, macOS, and Linux.
-* Load and view multiple `.procreate` files at once.
+* Support to run on lambda
+* Stream the file to s3
 * Export `.procreate` files to `png, jpeg, tga, tiff, webp, bmp` formats.
-* Change layer settings and live-preview the final result.
-  * Currently supports blending modes, clipping masks, opacity, hiding, and groups.
-* Drag and drop loading.
-* GPU rendering, leveraging cross-platform `wgpu` integration.
-  * Rotate and flip the canvas at orthogonal angles and orientations.
-  * Rotate the view arbitrarily.
-  * Smooth or pixelated sampling in the viewer.
-
-### Wishlist
-The following features will probably be added sometime in the future.
-* Documentation.
-* More utilization of `async` mechanics.
-* Nicer and more robust UI.
-* PSD export.
-* PSD preview (limited).
 
 ## Notes
 ### Accuracy

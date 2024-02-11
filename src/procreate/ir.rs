@@ -1,11 +1,11 @@
 use std::io::Read;
 use std::sync::atomic::AtomicU32;
 
-use super::{SilicaError, SilicaGroup, SilicaHierarchy, SilicaLayer, TilingData, ZipArchiveMmap};
+use super::{ProcreateError, SilicaGroup, SilicaHierarchy, SilicaLayer, TilingData, ZipArchiveMmap};
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::ns_archive::{NsArchiveError, NsClass, Size, WrappedArray};
 use crate::ns_archive::{NsDecode, NsKeyedArchive};
-use crate::silica::BlendingMode;
+use crate::procreate::BlendingMode;
 use image::{Pixel, Rgba};
 use minilzo_rs::LZO;
 use once_cell::sync::OnceCell;
@@ -13,12 +13,12 @@ use plist::{Dictionary, Value};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 
-pub(super) enum SilicaIRHierarchy<'a> {
-    Layer(SilicaIRLayer<'a>),
-    Group(SilicaIRGroup<'a>),
+pub(super) enum ProcreateIRHierarchy<'a> {
+    Layer(ProcreateIRLayer<'a>),
+    Group(ProcreateIRGroup<'a>),
 }
 
-pub(super) struct SilicaIRLayer<'a> {
+pub(super) struct ProcreateIRLayer<'a> {
     nka: &'a NsKeyedArchive,
     coder: &'a Dictionary,
 }
@@ -34,7 +34,7 @@ pub(super) struct IRData<'a> {
     pub(super) counter: &'a AtomicU32,
 }
 
-impl<'a> NsDecode<'a> for SilicaIRLayer<'a> {
+impl<'a> NsDecode<'a> for ProcreateIRLayer<'a> {
     fn decode(
         nka: &'a NsKeyedArchive,
         key: &'a str,
@@ -47,8 +47,8 @@ impl<'a> NsDecode<'a> for SilicaIRLayer<'a> {
     }
 }
 
-impl SilicaIRLayer<'_> {
-    pub(super) fn load(self, meta: &IRData<'_>) -> Result<SilicaLayer, SilicaError> {
+impl ProcreateIRLayer<'_> {
+    pub(super) fn load(self, meta: &IRData<'_>) -> Result<SilicaLayer, ProcreateError> {
         let nka = self.nka;
         let coder = self.coder;
         let uuid = nka.fetch::<String>(coder, "UUID")?;
@@ -65,7 +65,7 @@ impl SilicaIRLayer<'_> {
         meta.file_names
             .into_par_iter()
             .filter(|path| path.starts_with(&uuid))
-            .map(|path| -> Result<(), SilicaError> {
+            .map(|path| -> Result<(), ProcreateError> {
                 let mut archive = meta.archive.clone();
 
                 let chunk_str = &path[uuid.len()..path.find('.').unwrap_or(path.len())];
@@ -126,13 +126,13 @@ impl SilicaIRLayer<'_> {
     }
 }
 
-pub(super) struct SilicaIRGroup<'a> {
+pub(super) struct ProcreateIRGroup<'a> {
     nka: &'a NsKeyedArchive,
     coder: &'a Dictionary,
-    children: Vec<SilicaIRHierarchy<'a>>,
+    children: Vec<ProcreateIRHierarchy<'a>>,
 }
 
-impl<'a> NsDecode<'a> for SilicaIRGroup<'a> {
+impl<'a> NsDecode<'a> for ProcreateIRGroup<'a> {
     fn decode(
         nka: &'a NsKeyedArchive,
         key: &'a str,
@@ -143,13 +143,13 @@ impl<'a> NsDecode<'a> for SilicaIRGroup<'a> {
             nka,
             coder,
             children: nka
-                .fetch::<WrappedArray<SilicaIRHierarchy<'a>>>(coder, "children")?
+                .fetch::<WrappedArray<ProcreateIRHierarchy<'a>>>(coder, "children")?
                 .objects,
         })
     }
 }
 
-impl<'a> NsDecode<'a> for SilicaIRHierarchy<'a> {
+impl<'a> NsDecode<'a> for ProcreateIRHierarchy<'a> {
     fn decode(
         nka: &'a NsKeyedArchive,
         key: &'a str,
@@ -159,19 +159,19 @@ impl<'a> NsDecode<'a> for SilicaIRHierarchy<'a> {
         let class = nka.fetch::<NsClass>(coder, "$class")?;
 
         match class.class_name.as_str() {
-            "SilicaGroup" => Ok(SilicaIRGroup::<'a>::decode(nka, key, val).map(Self::Group)?),
-            "SilicaLayer" => Ok(SilicaIRLayer::<'a>::decode(nka, key, val).map(Self::Layer)?),
+            "SilicaGroup" => Ok(ProcreateIRGroup::<'a>::decode(nka, key, val).map(Self::Group)?),
+            "SilicaLayer" => Ok(ProcreateIRLayer::<'a>::decode(nka, key, val).map(Self::Layer)?),
             _ => Err(NsArchiveError::TypeMismatch("$class".to_string())),
         }
     }
 }
 
-impl<'a> SilicaIRGroup<'a> {
+impl<'a> ProcreateIRGroup<'a> {
     pub(super) fn count_layer(&self) -> u32 {
         self.children.iter().map(|ir| ir.count_layer()).sum::<u32>()
     }
 
-    fn load(self, meta: &'a IRData<'a>) -> Result<SilicaGroup, SilicaError> {
+    fn load(self, meta: &'a IRData<'a>) -> Result<SilicaGroup, ProcreateError> {
         let nka = self.nka;
         let coder = self.coder;
         Ok(SilicaGroup {
@@ -186,18 +186,18 @@ impl<'a> SilicaIRGroup<'a> {
     }
 }
 
-impl<'a> SilicaIRHierarchy<'a> {
+impl<'a> ProcreateIRHierarchy<'a> {
     pub(super) fn count_layer(&self) -> u32 {
         match self {
-            SilicaIRHierarchy::Layer(_) => 1,
-            SilicaIRHierarchy::Group(group) => group.count_layer(),
+            ProcreateIRHierarchy::Layer(_) => 1,
+            ProcreateIRHierarchy::Group(group) => group.count_layer(),
         }
     }
 
-    pub(crate) fn load(self, meta: &'a IRData<'a>) -> Result<SilicaHierarchy, SilicaError> {
+    pub(crate) fn load(self, meta: &'a IRData<'a>) -> Result<SilicaHierarchy, ProcreateError> {
         Ok(match self {
-            SilicaIRHierarchy::Layer(layer) => SilicaHierarchy::Layer(layer.load(meta)?),
-            SilicaIRHierarchy::Group(group) => SilicaHierarchy::Group(group.load(meta)?),
+            ProcreateIRHierarchy::Layer(layer) => SilicaHierarchy::Layer(layer.load(meta)?),
+            ProcreateIRHierarchy::Group(group) => SilicaHierarchy::Group(group.load(meta)?),
         })
     }
 }

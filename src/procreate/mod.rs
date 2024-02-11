@@ -1,6 +1,6 @@
 mod ir;
 
-use self::ir::{IRData, SilicaIRHierarchy, SilicaIRLayer};
+use self::ir::{IRData, ProcreateIRHierarchy, ProcreateIRLayer};
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::ns_archive::{NsArchiveError, NsKeyedArchive, Size, WrappedArray};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -13,7 +13,7 @@ use thiserror::Error;
 use zip::read::ZipArchive;
 
 #[derive(Error, Debug)]
-pub enum SilicaError {
+pub enum ProcreateError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Plist error: {0}")]
@@ -101,7 +101,7 @@ impl BlendingMode {
         }
     }
 
-    pub fn from_u32(blend: u32) -> Result<Self, SilicaError> {
+    pub fn from_u32(blend: u32) -> Result<Self, ProcreateError> {
         Ok(match blend {
             0 => Self::Normal,
             1 => Self::Multiply,
@@ -129,7 +129,7 @@ impl BlendingMode {
             24 => Self::LighterColor,
             25 => Self::DarkerColor,
             26 => Self::Divide,
-            _ => Err(SilicaError::InvalidValue)?,
+            _ => Err(ProcreateError::InvalidValue)?,
         })
     }
 
@@ -226,9 +226,12 @@ type ZipArchiveMmap<'a> = ZipArchive<Cursor<&'a [u8]>>;
 
 impl ProcreateFile {
     // Load a Procreate file asynchronously.
-    pub fn open<P: AsRef<Path>>(p: P, dev: &GpuHandle) -> Result<(Self, GpuTexture), SilicaError> {
-        let path = p.as_ref();
-        let file = OpenOptions::new().read(true).write(false).open(path)?;
+    pub fn open<P: AsRef<Path>>(
+        path: P,
+        dev: &GpuHandle,
+    ) -> Result<(Self, GpuTexture), ProcreateError> {
+        let path_ref = path.as_ref();
+        let file = OpenOptions::new().read(true).write(false).open(path_ref)?;
 
         let mapping = unsafe { memmap2::Mmap::map(&file)? };
         let mut archive = ZipArchive::new(Cursor::new(&mapping[..]))?;
@@ -249,7 +252,7 @@ impl ProcreateFile {
         archive: ZipArchiveMmap<'_>,
         nka: NsKeyedArchive,
         dev: &GpuHandle,
-    ) -> Result<(Self, GpuTexture), SilicaError> {
+    ) -> Result<(Self, GpuTexture), ProcreateError> {
         let root = nka.root()?;
 
         let size = nka.fetch::<Size<u32>>(root, "size")?;
@@ -270,7 +273,7 @@ impl ProcreateFile {
         let file_names = archive.file_names().collect::<Vec<_>>();
 
         let ir_hierachy = nka
-            .fetch::<WrappedArray<SilicaIRHierarchy>>(root, "unwrappedLayers")?
+            .fetch::<WrappedArray<ProcreateIRHierarchy>>(root, "unwrappedLayers")?
             .objects;
 
         let gpu_textures = GpuTexture::empty_layers(
@@ -318,7 +321,7 @@ impl ProcreateFile {
                 tile_size,
                 size,
                 composite: nka
-                    .fetch::<SilicaIRLayer>(root, "composite")?
+                    .fetch::<ProcreateIRLayer>(root, "composite")?
                     .load(&ir_data)
                     .ok(),
                 layers: SilicaGroup {

@@ -1,16 +1,15 @@
-use crate::compositor::{CompositorTarget, BufferDimensions};
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
+use crate::compositor::{BufferDimensions, CompositorTarget};
 use crate::compositor::{CompositeLayer, CompositorPipeline};
-use crate::silica::{ProcreateFile, SilicaError, SilicaHierarchy};
+use crate::procreate::{ProcreateFile, ProcreateError, SilicaHierarchy};
 use parking_lot::{Mutex, RwLock};
-use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 pub struct App {
     pub dev: Arc<GpuHandle>,
-    pub compositor: CompositorHandle,
+    pub pipeline: CompositorPipeline,
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Default, Debug)]
@@ -29,20 +28,10 @@ impl Drop for Instance {
     }
 }
 
-pub struct CompositorHandle {
-    pub instances: RwLock<HashMap<InstanceKey, Instance>>,
-    pub curr_id: AtomicUsize,
-    pub pipeline: CompositorPipeline,
-}
-
 impl App {
     pub fn new(dev: GpuHandle) -> Self {
         App {
-            compositor: CompositorHandle {
-                instances: RwLock::new(HashMap::new()),
-                pipeline: CompositorPipeline::new(&dev),
-                curr_id: AtomicUsize::new(0),
-            },
+            pipeline: CompositorPipeline::new(&dev),
             dev: Arc::new(dev),
         }
     }
@@ -50,7 +39,7 @@ impl App {
     pub async fn load_file(
         &self,
         path: PathBuf,
-    ) -> Result<(ProcreateFile, GpuTexture, CompositorTarget), SilicaError> {
+    ) -> Result<(ProcreateFile, GpuTexture, CompositorTarget), ProcreateError> {
         let (file, gpu_textures) = ProcreateFile::open(path, &self.dev).unwrap();
 
         let mut target = CompositorTarget::new(self.dev.clone());
@@ -82,7 +71,7 @@ impl App {
 
         for unresolved_layer in &layers {
             target.render(
-                &self.compositor.pipeline,
+                &self.pipeline,
                 background,
                 &[unresolved_layer.clone()],
                 &textures,
@@ -106,12 +95,12 @@ impl App {
     /// Transform tree structure of layers into a linear list of
     /// layers for rendering.
     pub fn linearize_silica_layers<'a>(
-        layers: &'a crate::silica::SilicaGroup,
+        layers: &'a crate::procreate::SilicaGroup,
     ) -> Vec<CompositeLayer> {
         fn inner<'a>(
-            layers: &'a crate::silica::SilicaGroup,
+            layers: &'a crate::procreate::SilicaGroup,
             composite_layers: &mut Vec<CompositeLayer>,
-            mask_layer: &mut Option<(u32, &'a crate::silica::SilicaLayer)>,
+            mask_layer: &mut Option<(u32, &'a crate::procreate::SilicaLayer)>,
         ) {
             for layer in layers.children.iter().rev() {
                 match layer {
