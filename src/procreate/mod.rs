@@ -3,7 +3,6 @@ mod ir;
 use self::ir::{IRData, ProcreateIRHierarchy, ProcreateIRLayer};
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::ns_archive::{NsArchiveError, NsKeyedArchive, Size, WrappedArray};
-use bytes::Bytes;
 use image::EncodableLayout;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use std::fs::{File, OpenOptions};
