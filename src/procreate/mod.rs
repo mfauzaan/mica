@@ -5,13 +5,13 @@ use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::ns_archive::{NsArchiveError, NsKeyedArchive, Size, WrappedArray};
 use image::EncodableLayout;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-use std::fs::{File, OpenOptions};
-use std::io::Write;
+use std::fs::OpenOptions;
 use std::io::Cursor;
 use std::io::Read;
+use std::io::Write;
 use std::path::Path;
 use std::sync::atomic::AtomicU32;
-use tempfile::{tempdir, tempfile};
+use tempfile::tempfile;
 use thiserror::Error;
 use zip::read::ZipArchive;
 
