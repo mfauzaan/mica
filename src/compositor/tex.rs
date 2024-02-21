@@ -171,7 +171,7 @@ impl GpuTexture {
         dev: &GpuHandle,
         dim: BufferDimensions,
         path: std::path::PathBuf,
-    ) -> image::ImageResult<()> {
+    ) -> tokio::task::JoinHandle<()>  {
         let output_buffer = dev.device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: (dim.padded_bytes_per_row * dim.height) as u64,
@@ -217,7 +217,7 @@ impl GpuTexture {
         let data = buffer_slice.get_mapped_range().to_vec();
         output_buffer.unmap();
 
-        tokio::spawn(async move {
+         tokio::spawn(async move {
             eprintln!("Loading data to CPU");
             let buffer = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(
                 dim.padded_bytes_per_row / 4,
@@ -229,8 +229,6 @@ impl GpuTexture {
             eprintln!("Saving the file to {}", path.display());
             buffer.save(path).expect("Failed to save image");
             eprintln!("Image saved");
-        });
-
-        Ok(())
+        })
     }
 }

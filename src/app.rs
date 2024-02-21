@@ -4,6 +4,9 @@ use crate::compositor::{CompositeLayer, CompositorPipeline};
 use crate::procreate::{ProcreateError, ProcreateFile, SilicaHierarchy};
 use std::path::PathBuf;
 use std::sync::Arc;
+use tempfile::{tempdir, TempDir};
+use tokio::task::spawn;
+use tokio::task::JoinHandle;
 
 pub struct App {
     pub dev: Arc<GpuHandle>,
@@ -65,12 +68,13 @@ impl App {
         file: &ProcreateFile,
         textures: &GpuTexture,
         mut target: CompositorTarget,
-        current_dir: PathBuf,
+        tmp_dir: &TempDir,
     ) {
         let new_layer_config = file.layers.clone();
         let background = (!file.background_hidden).then_some(file.background_color);
 
         let layers = App::linearize_silica_layers(&new_layer_config);
+        let mut handles = Vec::new();
 
         for unresolved_layer in &layers {
             target.render(
@@ -81,8 +85,8 @@ impl App {
             );
 
             if let Some(texture) = target.output.as_ref() {
-                let export_path = std::path::Path::new(&current_dir).join(format!(
-                    "tmp/demo_layers/{}.png",
+                let export_path = tmp_dir.path().join(format!(
+                    "{}.png",
                     std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
@@ -91,8 +95,13 @@ impl App {
 
                 let copied_texture = texture.texture.clone(&self.dev);
                 let dim = BufferDimensions::from_extent(copied_texture.size);
-                let _ = copied_texture.export(&target.dev, dim, export_path).await;
+                let handle = copied_texture.export(&target.dev, dim, export_path).await;
+                handles.push(handle);
             }
+        }
+
+        for handle in handles {
+            handle.await.unwrap();
         }
     }
 

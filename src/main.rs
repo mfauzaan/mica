@@ -10,9 +10,10 @@ use compositor::dev::GpuHandle;
 #[tokio::main]
 async fn main() {
     let current_dir = std::env::current_dir().expect("Unable to get current working directory");
-    let config_path = std::path::Path::new(&current_dir).join("demo_files/Reference_Blend_File.procreate");
+    let config_path =
+        std::path::Path::new(&current_dir).join("demo_files/Reference_Blend_File.procreate");
     // let config_path =
-        // std::path::Path::new(&current_dir).join("demo_files/Untitled_Artwork.procreate");
+    // std::path::Path::new(&current_dir).join("demo_files/Untitled_Artwork.procreate");
 
     let dev = GpuHandle::new().await.expect("Unable to create GpuHandle");
     let app = App::new(dev);
@@ -22,7 +23,12 @@ async fn main() {
         .await
         .expect("Unable to load file");
 
-    app.extract_layers_and_export(&file, &gpu_textures, target, current_dir)
-        .await;
+    let tmp_dir = tempfile::Builder::new()
+        .prefix("mica")
+        .tempdir()
+        .expect("Failed to create temporary directory");
 
+     app
+        .extract_layers_and_export(&file, &gpu_textures, target, &tmp_dir)
+        .await;
 }

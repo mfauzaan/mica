@@ -255,7 +255,6 @@ impl ProcreateFile {
         file_content: Vec<u8>,
         dev: &GpuHandle,
     ) -> Result<(Self, GpuTexture), ProcreateError> {
-        // Specify the desired file path
         let mut file = tempfile()?;
         file.write_all(file_content.as_bytes())?;
 
