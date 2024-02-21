@@ -607,7 +607,7 @@ fn shader_load() -> wgpu::ShaderModuleDescriptor<'static> {
                 use std::io::Read;
                 let mut file = OpenOptions::new()
                     .read(true)
-                    .open(concat!(env!("CARGO_MANIFEST_DIR"), "/shader.wgsl"))
+                    .open("../shader.wgsl")
                     .unwrap();
 
                 let mut buf = String::new();
