@@ -18,7 +18,7 @@ async fn main() {
     let app = App::new(dev);
 
     let (file, gpu_textures, target) = app
-        .load_file(config_path)
+        .load_file_from_path(config_path)
         .await
         .expect("Unable to load file");
 

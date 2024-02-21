@@ -18,7 +18,28 @@ impl App {
         }
     }
 
-    pub async fn load_file(
+    pub async fn load_file_from_bytes(
+        &self,
+        file: Vec<u8>,
+    ) -> Result<(ProcreateFile, GpuTexture, CompositorTarget), ProcreateError> {
+        let (file, gpu_textures) = ProcreateFile::open_from_bytes(file, &self.dev).unwrap();
+
+        let mut target = CompositorTarget::new(self.dev.clone());
+
+        target
+            .data
+            .flip_vertices(file.flipped.horizontally, file.flipped.vertically);
+        target.set_dimensions(file.size.width, file.size.height);
+
+        for _ in 0..file.orientation {
+            target.data.rotate_vertices(true);
+            target.set_dimensions(target.dim.height, target.dim.width);
+        }
+
+        Ok((file, gpu_textures, target))
+    }
+
+    pub async fn load_file_from_path(
         &self,
         path: PathBuf,
     ) -> Result<(ProcreateFile, GpuTexture, CompositorTarget), ProcreateError> {

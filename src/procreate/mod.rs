@@ -3,12 +3,16 @@ mod ir;
 use self::ir::{IRData, ProcreateIRHierarchy, ProcreateIRLayer};
 use crate::compositor::{dev::GpuHandle, tex::GpuTexture};
 use crate::ns_archive::{NsArchiveError, NsKeyedArchive, Size, WrappedArray};
+use bytes::Bytes;
+use image::EncodableLayout;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
+use std::io::Write;
 use std::io::Cursor;
 use std::io::Read;
 use std::path::Path;
 use std::sync::atomic::AtomicU32;
+use tempfile::{tempdir, tempfile};
 use thiserror::Error;
 use zip::read::ZipArchive;
 
@@ -232,6 +236,29 @@ impl ProcreateFile {
     ) -> Result<(Self, GpuTexture), ProcreateError> {
         let path_ref = path.as_ref();
         let file = OpenOptions::new().read(true).write(false).open(path_ref)?;
+
+        let mapping = unsafe { memmap2::Mmap::map(&file)? };
+        let mut archive = ZipArchive::new(Cursor::new(&mapping[..]))?;
+
+        let nka: NsKeyedArchive = {
+            let mut document = archive.by_name("Document.archive")?;
+
+            let mut buf = Vec::with_capacity(document.size() as usize);
+            document.read_to_end(&mut buf)?;
+
+            NsKeyedArchive::from_reader(Cursor::new(buf))?
+        };
+
+        Self::from_ns(archive, nka, dev)
+    }
+
+    pub fn open_from_bytes(
+        file_content: Vec<u8>,
+        dev: &GpuHandle,
+    ) -> Result<(Self, GpuTexture), ProcreateError> {
+        // Specify the desired file path
+        let mut file = tempfile()?;
+        file.write_all(file_content.as_bytes())?;
 
         let mapping = unsafe { memmap2::Mmap::map(&file)? };
         let mut archive = ZipArchive::new(Cursor::new(&mapping[..]))?;
