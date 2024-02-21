@@ -9,7 +9,7 @@ use self::{
 };
 use crate::procreate::BlendingMode;
 use image::{Pixel, Rgba};
-use std::{num::NonZeroU32, sync::Arc};
+use std::{num::NonZeroU32, sync::Arc, path::PathBuf};
 use wgpu::{util::DeviceExt, CommandEncoder};
 
 /// Associates the texture's actual dimensions and its buffer dimensions on the GPU.
@@ -605,9 +605,13 @@ fn shader_load() -> wgpu::ShaderModuleDescriptor<'static> {
             source: wgpu::ShaderSource::Wgsl({
                 use std::fs::OpenOptions;
                 use std::io::Read;
+                // Get the path to the current crate's root directory
+                let crate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+                let shader_path = crate_dir.join("src").join("shader.wgsl");
+
                 let mut file = OpenOptions::new()
                     .read(true)
-                    .open("../shader.wgsl")
+                    .open(shader_path)
                     .unwrap();
 
                 let mut buf = String::new();
