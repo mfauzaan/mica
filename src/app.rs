@@ -4,9 +4,7 @@ use crate::compositor::{CompositeLayer, CompositorPipeline};
 use crate::procreate::{ProcreateError, ProcreateFile, SilicaHierarchy};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tempfile::{tempdir, TempDir};
-use tokio::task::spawn;
-use tokio::task::JoinHandle;
+use image::{ImageBuffer, Rgba};
 
 pub struct App {
     pub dev: Arc<GpuHandle>,
@@ -21,6 +19,7 @@ impl App {
         }
     }
 
+    #[allow(unused)]
     pub async fn load_file_from_bytes(
         &self,
         file: Vec<u8>,
@@ -63,18 +62,17 @@ impl App {
         Ok((file, gpu_textures, target))
     }
 
-    pub async fn extract_layers_and_export(
+    pub async fn extract_image_buffers(
         &self,
         file: &ProcreateFile,
         textures: &GpuTexture,
         mut target: CompositorTarget,
-        tmp_dir: &TempDir,
-    ) {
+    ) -> Vec<ImageBuffer<Rgba<u8>, Vec<u8>>> {
         let new_layer_config = file.layers.clone();
         let background = (!file.background_hidden).then_some(file.background_color);
 
         let layers = App::linearize_silica_layers(&new_layer_config);
-        let mut handles = Vec::new();
+        let mut image_buffers = Vec::new();
 
         for unresolved_layer in &layers {
             target.render(
@@ -85,24 +83,14 @@ impl App {
             );
 
             if let Some(texture) = target.output.as_ref() {
-                let export_path = tmp_dir.path().join(format!(
-                    "{}.png",
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis()
-                ));
-
                 let copied_texture = texture.texture.clone(&self.dev);
                 let dim = BufferDimensions::from_extent(copied_texture.size);
-                let handle = copied_texture.export(&target.dev, dim, export_path).await;
-                handles.push(handle);
+                let image_buffer = copied_texture.export_texture(&target.dev, dim).await;
+                image_buffers.push(image_buffer);
             }
         }
 
-        for handle in handles {
-            handle.await.unwrap();
-        }
+        image_buffers
     }
 
     /// Transform tree structure of layers into a linear list of
@@ -146,3 +134,4 @@ impl App {
         composite_layers
     }
 }
+
